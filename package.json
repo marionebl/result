@@ -1,6 +1,6 @@
 {
   "name": "@marionebl/result",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Rust Results for JavaScript",
   "repository": "https://github.com/marionebl/result",
   "author": "Mario Nebl <hello@mario-nebl.de>",
