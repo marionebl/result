@@ -273,6 +273,18 @@
     "@types/istanbul-lib-coverage" "^2.0.0"
     "@types/yargs" "^12.0.9"
 
+"@marionebl/option@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@marionebl/option/-/option-1.0.2.tgz#ff5433e99324db9ce65410499533937f25b4d4da"
+  integrity sha512-u0A9k2/NaWRLIyzi3owLCQP2zz8Kb5rGUw8VkDropKRHqoCWKGPsq1jnHgO2W2iR6ubCDfp0OureQptxftx+/g==
+  dependencies:
+    "@marionebl/result" "^1.0.2"
+
+"@marionebl/result@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@marionebl/result/-/result-1.0.2.tgz#d8bb6678ee9de0f7197863dd2d8d8964b44208e0"
+  integrity sha512-YnM16VDbxjb/9spdjDi/aekejUpbLuWWW/QzzehXFGdDKJS23DQFrC4GBXcfA9na2U+bYynuFU3bSUkzSskuXw==
+
 "@types/babel__core@^7.1.0":
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.1.0.tgz#710f2487dda4dcfd010ca6abb2b4dc7394365c51"
