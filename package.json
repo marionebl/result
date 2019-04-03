@@ -1,10 +1,13 @@
 {
   "name": "@marionebl/result",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Rust Results for JavaScript",
   "repository": "https://github.com/marionebl/result",
   "author": "Mario Nebl <hello@mario-nebl.de>",
   "license": "MIT",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "files": ["./lib"],
   "devDependencies": {
     "@marionebl/option": "^1.0.0",
     "@types/jest": "^24.0.11",
