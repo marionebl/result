@@ -7,6 +7,11 @@
   "license": "MIT",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
+  "scripts": {
+    "docs": "typedoc --theme markdown --out doc",
+    "build": "tsc",
+    "test": "jest"
+  },
   "dependencies": {
     "@marionebl/option": "^1.0.2"
   },
@@ -15,6 +20,8 @@
     "jest": "^24.6.0",
     "jest-cli": "^24.6.0",
     "ts-jest": "^24.0.1",
+    "typedoc": "^0.14.2",
+    "typedoc-plugin-markdown": "^1.1.27",
     "typescript": "^3.4.1"
   }
 }
