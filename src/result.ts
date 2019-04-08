@@ -12,14 +12,14 @@ export interface Ok<Payload> {
     fb: () => Promise<V>,
     fn: (v: Payload) => Promise<V>
   ): Promise<Ok<V>>;
-  mapErr(fn: (err: Error) => Promise<Error>): Promise<Result<Payload>>;
+  mapErr(fn: (err: Error) => Promise<Error>): Promise<Result<Payload, any>>;
 
-  and<T>(b: Err): Promise<Err>;
-  and<T>(b: Ok<T>): Promise<Result<Payload | T>>;
-  and<T>(b: Result<T>): Promise<Result<Payload | T>>;
+  and<T>(b: Err<any>): Promise<Err<any>>;
+  and<T>(b: Ok<T>): Promise<Result<Payload | T, any>>;
+  and<T>(b: Result<T, any>): Promise<Result<Payload | T, any>>;
 
-  or<T extends Result<V>, V>(b: T): Promise<this | T>;
-  orElse<T extends Result<V>, V>(fn: () => Promise<T>): Promise<this | T>;
+  or<T extends Result<V, any>, V>(b: T): Promise<this | T>;
+  orElse<T extends Result<V, any>, V>(fn: () => Promise<T>): Promise<this | T>;
 
   unwrapOr<T>(b: T): Promise<T | Payload>;
   unwrapOrElse<T>(fn: (err: Error) => Promise<T>): Promise<T | Payload>;
@@ -30,27 +30,27 @@ export interface Ok<Payload> {
   unwrapErr(): Promise<Error>;
   expectErr(message: string): Promise<Error>;
 
-  transpose(): Promise<Option<Result<Payload>>>;
+  transpose(): Promise<Option<Result<Payload, any>>>;
 }
 
-export interface Err {
-  sync(): Promise<Err>;
+export interface Err<Code> {
+  sync(): Promise<Err<Code>>;
 
   isErr(): Promise<true>;
   isOk(): Promise<false>;
   ok(): Promise<None>;
   err(): Promise<Some<Error>>;
 
-  map<V>(fn: (v: any) => Promise<V>): Promise<Err>;
+  map<V>(fn: (v: any) => Promise<V>): Promise<Err<Code>>;
   mapOrElse<V>(
     fb: () => Promise<V>,
     fn: (v: any) => Promise<V>
   ): Promise<Ok<V>>;
-  mapErr(fn: (err: Error) => Promise<Error>): Promise<Err>;
+  mapErr(fn: (err: Error) => Promise<Error>): Promise<Err<Code>>;
 
-  and<T>(b: Result<T>): Promise<Err>;
-  or<T extends Result<V>, V>(b: T): Promise<T>;
-  orElse<T extends Result<V>, V>(fn: () => Promise<T>): Promise<T>;
+  and<T, V>(b: Result<T, V>): Promise<Err<V>>;
+  or<T extends Result<V, S>, V, S>(b: T): Promise<T>;
+  orElse<T extends Result<V, S>, V, S>(fn: () => Promise<T>): Promise<T>;
 
   unwrapOr<T>(b: T): Promise<T>;
   unwrapOrElse<T>(fn: (err: Error) => Promise<T>): Promise<T>;
@@ -64,14 +64,23 @@ export interface Err {
   transpose(): Promise<None>;
 }
 
-export class Result<Payload> {
+export class CodedError<Code> extends Error {
+  public readonly code: Code | 'unknown';
+
+  constructor(message: string, code?: Code) {
+    super(message);
+    this.code = code || 'unknown';
+  }
+}
+
+export class Result<Payload, Code> {
   private payload?: Promise<Payload> | Payload;
 
-  private constructor({ payload }: { payload: Payload }) {
+  private constructor({ payload }: { payload: Payload | Promise<Payload> }) {
     this.payload = Promise.resolve().then(() => payload);
   }
 
-  public async sync(): Promise<Result<Payload>> {
+  public async sync(): Promise<Result<Payload, Code>> {
     try {
       this.payload = await this.payload;
     
@@ -112,7 +121,7 @@ export class Result<Payload> {
    * ```
    *
    */
-  public static from<Payload>(payload: Payload): Result<Payload> {
+  public static from<Payload, Code>(payload: Payload | Promise<Payload>): Result<Payload, Code> {
     return new Result({ payload });
   }
 
@@ -161,8 +170,9 @@ export class Result<Payload> {
    * });
    * ```
    */
-  public static Err(err: Error): Err {
-    return new Result({ payload: err }) as Err;
+  public static Err<Code>(message: string, code?: Code): Err<Code> {
+    const err = new Error(message);
+    return new Result({ payload: err }) as Err<Code>;
   }
 
   /**
@@ -305,13 +315,13 @@ export class Result<Payload> {
    * });
    * ```
    */
-  public async map<V>(fn: (v: Payload) => Promise<V>): Promise<Ok<V> | Err> {
+  public async map<V>(fn: (v: Payload) => Promise<V>): Promise<Ok<V> | Err<Code>> {
     if (await this.isOk()) {
       const payload = await this.payload;
       return Result.Ok(await fn(payload!));
     }
 
-    return this as Err;
+    return this as Err<Code>;
   }
 
   /**
@@ -369,12 +379,13 @@ export class Result<Payload> {
    *   throw err
    * });
    */
-  public async mapErr(
+  public async mapErr<C>(
     fn: (err: Error) => Promise<Error>
-  ): Promise<Result<Payload>> {
+  ): Promise<Result<Payload, Code | C>> {
     if (await this.isErr()) {
       const payload = await this.payload;
-      return Result.Err(await fn((payload as unknown) as Error));
+      const err = await fn((payload as unknown as Error));
+      return Result.Err(err.message);
     }
 
     return this;
@@ -410,7 +421,7 @@ export class Result<Payload> {
    * });
    * ```
    */
-  public async and<T>(b: Result<T>): Promise<Result<Payload | T>> {
+  public async and<T, V>(b: Result<T, V>): Promise<Result<Payload | T, Code | V>> {
     if (await this.isErr()) {
       return this;
     }
@@ -464,7 +475,7 @@ export class Result<Payload> {
    * });
    * ```
    */
-  public async or<T extends Result<V>, V>(b: T): Promise<this | T> {
+  public async or<T extends Result<V, S>, V, S>(b: T): Promise<this | T> {
     if (await this.isOk()) {
       return this;
     }
@@ -514,7 +525,7 @@ export class Result<Payload> {
    * });
    * ```
    */
-  public async orElse<T extends Result<V>, V>(fn: () => Promise<T>): Promise<this | T> {
+  public async orElse<T extends Result<V, S>, V, S>(fn: () => Promise<T>): Promise<this | T> {
     if (await this.isOk()) {
       return this;
     }
@@ -714,7 +725,7 @@ export class Result<Payload> {
     }
   }
 
-  public async transpose(): Promise<Option<Result<Payload>>> {
+  public async transpose(): Promise<Option<Result<Payload, Code>>> {
     try {
       const payload = await this.payload!;
 
@@ -723,7 +734,7 @@ export class Result<Payload> {
       }
 
       if (payload instanceof Error) {
-        return Option.Some(Result.Err(payload));
+        return Option.Some(Result.Err(payload.message));
       }
 
       return Option.None();

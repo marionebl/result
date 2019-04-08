@@ -10,7 +10,7 @@ describe("Result.from", () => {
   test("creates Err for sync error", async () => {
     const err = Result.from(new Error("Something went wrong"));
     expect(await err.sync()).toEqual(
-      await Result.Err(new Error("Something went wrong")).sync()
+      await Result.Err("Something went wrong").sync()
     );
   });
 
@@ -24,7 +24,7 @@ describe("Result.from", () => {
       Promise.resolve().then(() => new Error("Something went wrong"))
     );
     expect(await err.sync()).toEqual(
-      await Result.Err(new Error("Something went wrong")).sync()
+      await Result.Err("Something went wrong").sync()
     );
   });
 });
@@ -110,7 +110,7 @@ describe(".ok", () => {
   });
 
   test("yields None payload for Err", async () => {
-    const err = Result.Err(new Error("Something went wrong"));
+    const err = Result.Err("Something went wrong");
     expect(await err.ok()).toEqual(Option.None());
   });
 });
@@ -122,9 +122,8 @@ describe(".err", () => {
   });
 
   test("yields Some(e) payload for Err(e)", async () => {
-    const exn = new Error("Something went wrong");
-    const err = Result.Err(exn);
-    expect(await err.err()).toEqual(Option.Some(exn));
+    const err = Result.Err("Something went wrong");
+    expect(await err.err()).toEqual(Option.Some(new Error("Something went wrong")));
   });
 });
 
@@ -138,18 +137,17 @@ describe(".map", () => {
   });
 
   test("does not execute `fn` on Err()", async () => {
-    const err = Result.Err(new Error("Something went wrong"));
+    const err = Result.Err("Something went wrong");
     const increment = jest.fn(async (i: number) => i + 1);
     await err.map(increment);
     expect(increment).not.toHaveBeenCalled();
   });
 
   test("does not modify Err()", async () => {
-    const expn = new Error("Something went wrong");
-    const err = Result.Err(expn);
+    const err = Result.Err("Something went wrong");
     const increment = async (i: number) => i + 1;
     expect(await err.map(increment).then(e => e.sync())).toEqual(
-      await Result.Err(expn).sync()
+      await Result.Err("Something went wrong").sync()
     );
   });
 });
@@ -165,7 +163,7 @@ describe(".mapOrElse", () => {
   });
 
   test("does not execute `fn` on Err()", async () => {
-    const err = Result.Err(new Error("Something went wrong"));
+    const err = Result.Err("Something went wrong");
     const zero = jest.fn(async () => 0);
     const increment = jest.fn(async (i: number) => i + 1);
     await err.mapOrElse(zero, increment);
@@ -175,8 +173,7 @@ describe(".mapOrElse", () => {
   });
 
   test("computes `fb` value for Err()", async () => {
-    const expn = new Error("Something went wrong");
-    const err = Result.Err(expn);
+    const err = Result.Err("Something went wrong");
     const zero = jest.fn(async () => 0);
     const increment = async (i: number) => i + 1;
     expect(await err.mapOrElse(zero, increment).then(e => e.ok())).toEqual(
@@ -201,7 +198,7 @@ describe(".mapErr", () => {
   });
 
   test("does execute fn for Err()", async () => {
-    const err = Result.Err(new Error("Something went wrong"));
+    const err = Result.Err("Something went wrong");
     const nope = jest.fn(async () => new Error("nope"));
     await err.mapErr(nope);
 
@@ -209,7 +206,7 @@ describe(".mapErr", () => {
   });
 
   test("computes `fb` value for Err()", async () => {
-    const err = Result.Err(new Error("Something went wrong."));
+    const err = Result.Err("Something went wrong.");
     const nope = jest.fn(async err => new Error(err.message + " Booh!"));
     const result = await err.mapErr(nope);
 
@@ -229,7 +226,7 @@ describe(".and", () => {
   });
 
   test("err.and(okB) returns err", async () => {
-    const err = Result.Err(new Error(""));
+    const err = Result.Err("Something went wrong.");
     const okB = Result.Ok("b");
 
     const result = await err.and(okB);
@@ -239,7 +236,7 @@ describe(".and", () => {
 
   test("okA.and(err) returns err", async () => {
     const okA = Result.Ok("a");
-    const err = Result.Err(new Error(""));
+    const err = Result.Err("Something went wrong.");
 
     const result = await err.and(okA);
 
@@ -247,8 +244,8 @@ describe(".and", () => {
   });
 
   test("errA.and(errB) returns errA", async () => {
-    const errA = Result.Err(new Error("a"));
-    const errB = Result.Err(new Error("b"));
+    const errA = Result.Err("a");
+    const errB = Result.Err("b");
 
     const result = await errA.and(errB);
 
@@ -259,7 +256,7 @@ describe(".and", () => {
 describe(".or", () => {
   test("ok.or(err) returns ok", async () => {
     const ok = Result.Ok("a");
-    const err = Result.Err(new Error(""));
+    const err = Result.Err("Something went wrong.");
     const result = await ok.or(err);
 
     expect(await result.sync()).toEqual(await ok.sync());
@@ -267,7 +264,7 @@ describe(".or", () => {
 
   test("err.or(ok) returns ok", async () => {
     const ok = Result.Ok("a");
-    const err = Result.Err(new Error(""));
+    const err = Result.Err("Something went wrong.");
     const result = await err.or(ok);
 
     expect(await result.sync()).toEqual(await ok.sync());
@@ -293,7 +290,7 @@ describe(".or", () => {
 describe(".orElse", () => {
   test("ok.orElse(() => err) returns ok", async () => {
     const ok = Result.Ok("a");
-    const err = Result.Err(new Error(""));
+    const err = Result.Err("Something went wrong.");
     const result = await ok.orElse(async () => err);
 
     expect(await result.sync()).toEqual(await ok.sync());
@@ -301,7 +298,7 @@ describe(".orElse", () => {
 
   test("err.orElse(() => ok) returns ok", async () => {
     const ok = Result.Ok("a");
-    const err = Result.Err(new Error(""));
+    const err = Result.Err("Something went wrong.");
     const result = await err.orElse(async () => ok);
 
     expect(await result.sync()).toEqual(await ok.sync());
@@ -331,7 +328,7 @@ describe(".unwrapOr", () => {
   });
 
   test("return fallback for Err()", async () => {
-    const none = Result.Err(new Error(""));
+    const none = Result.Err("");
     expect(await none.unwrapOr("b")).toBe("b");
   });
 });
@@ -343,7 +340,7 @@ describe(".unwrapOrElse", () => {
   });
 
   test("runs fn for Err()", async () => {
-    const none = Result.Err(new Error("..."));
+    const none = Result.Err("...");
     expect(await none.unwrapOrElse(async err => err.message.length)).toBe(3);
   });
 });
@@ -355,7 +352,7 @@ describe(".unwrap", () => {
   });
 
   test("throws for Err()", async () => {
-    const none = Result.Err(new Error("..."));
+    const none = Result.Err("...");
     expect(none.unwrap()).rejects.toEqual(new Error("..."));
   });
 });
@@ -367,12 +364,12 @@ describe(".expect", () => {
   });
 
   test("throws for Err()", async () => {
-    const none = Result.Err(new Error("..."));
+    const none = Result.Err("...");
     expect(none.expect("Booh!")).rejects.toBeTruthy();
   });
 
   test("throws for Err() with message", async () => {
-    const none = Result.Err(new Error("..."));
+    const none = Result.Err("...");
     expect(none.expect("Booh!")).rejects.toEqual(new Error("Booh!"));
   });
 });
@@ -380,11 +377,11 @@ describe(".expect", () => {
 describe(".unwrapErr", () => {
   test("throws for Ok()", async () => {
     const some = Result.Ok("a");
-    // expect(some.unwrapErr()).rejects.toEqual(new Error("a"));
+    expect(some.unwrapErr()).rejects.toEqual(new Error("a"));
   });
 
   test("returns Error for Err()", async () => {
-    const none = Result.Err(new Error("..."));
+    const none = Result.Err("...");
     expect(await none.unwrapErr()).toEqual(new Error("..."));
   });
 });
@@ -392,16 +389,16 @@ describe(".unwrapErr", () => {
 describe(".expectErr", () => {
   test("throws for Ok()", async () => {
     const some = Result.Ok("a");
-    // expect(some.expectErr("Booh!")).rejects.toBeTruthy();
+    expect(some.expectErr("Booh!")).rejects.toBeTruthy();
   });
 
   test("throws for Ok() with message", async () => {
     const some = Result.Ok("a");
-    // expect(some.expectErr("Booh!")).rejects.toEqual(new Error("Booh!"));
+    expect(some.expectErr("Booh!")).rejects.toEqual(new Error("Booh!"));
   });
 
   test("returns Error for Err()", async () => {
-    const none = Result.Err(new Error("..."));
+    const none = Result.Err("...");
     expect(await none.expectErr("Booh!")).toEqual(new Error("..."));
   });
 });
@@ -423,7 +420,7 @@ describe(".transpose", () => {
   });
 
   test("Err => Some(Err)", async () => {
-    const err = Result.Err(new Error("..."));
+    const err = Result.Err("...");
     const option = await err.transpose();
     const result = await option.unwrap();
 

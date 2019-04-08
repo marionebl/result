@@ -273,10 +273,10 @@
     "@types/istanbul-lib-coverage" "^2.0.0"
     "@types/yargs" "^12.0.9"
 
-"@marionebl/option@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@marionebl/option/-/option-1.0.2.tgz#ff5433e99324db9ce65410499533937f25b4d4da"
-  integrity sha512-u0A9k2/NaWRLIyzi3owLCQP2zz8Kb5rGUw8VkDropKRHqoCWKGPsq1jnHgO2W2iR6ubCDfp0OureQptxftx+/g==
+"@marionebl/option@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@marionebl/option/-/option-1.0.4.tgz#edc8bf65ecaaa0598999e4ec7ef8f1e8a7dc0183"
+  integrity sha512-g32AyCz5GZwfEZsjNVrKk1ExXuMehjmbT1WYbznf4GywvBMdQW8By2TwMpHVZxeFtM9RpQQcRcKvqTqUszydmw==
   dependencies:
     "@marionebl/result" "^1.0.2"
 
