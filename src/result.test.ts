@@ -29,19 +29,28 @@ describe("Result.from", () => {
   });
 });
 
+describe("Result.Err", () => {
+  test("sets code property on err", async () => {
+    const err = Result.Err("Something went wrong", "code");
+    expect(await err.unwrapErr()).toEqual(
+      expect.objectContaining({
+        code: "code"
+      })
+    );
+  });
+});
+
 describe(".sync", () => {
   test("creates sync payload prop", async () => {
     const result = Result.from(1);
-    expect(await result.sync()).toEqual({ payload: 1 });
+    expect(await result.sync()).toEqual({ payload: 1 });
   });
 
   test("creates sync payload prop", async () => {
-    const result = Result.from(
-      Promise.resolve().then(() => new Error("a"))
-    );
-    expect(await result.sync()).toEqual({ payload: new Error("a") });
+    const result = Result.from(Promise.resolve().then(() => new Error("a")));
+    expect(await result.sync()).toEqual({ payload: new Error("a") });
   });
-})
+});
 
 describe(".isErr", () => {
   test("returns true for exceptions", async () => {
@@ -123,7 +132,9 @@ describe(".err", () => {
 
   test("yields Some(e) payload for Err(e)", async () => {
     const err = Result.Err("Something went wrong");
-    expect(await err.err()).toEqual(Option.Some(new Error("Something went wrong")));
+    expect(await err.err()).toEqual(
+      Option.Some(new Error("Something went wrong"))
+    );
   });
 });
 

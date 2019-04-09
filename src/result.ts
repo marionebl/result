@@ -172,6 +172,11 @@ export class Result<Payload, Code> {
    */
   public static Err<Code>(message: string, code?: Code): Err<Code> {
     const err = new Error(message);
+
+    if (typeof code !== 'undefined') {
+      (err as any).code = code;
+    }
+
     return new Result({ payload: err }) as Err<Code>;
   }
 
